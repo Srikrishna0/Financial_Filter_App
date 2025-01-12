@@ -1,196 +1,209 @@
-import './App.css'; // or './App.css' if that's where you're putting it
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from 'react';
+
+const financialData = [
+  {
+    date: "2024-09-28",
+    revenue: 391035000000,
+    netIncome: 93736000000,
+    grossProfit: 180683000000,
+    eps: 6.11,
+    operatingIncome: 123216000000,
+  },
+  {
+    date: "2023-09-30",
+    revenue: 383285000000,
+    netIncome: 96995000000,
+    grossProfit: 169148000000,
+    eps: 6.16,
+    operatingIncome: 114301000000,
+  },
+];
+
+
 
 const App = () => {
-  const [startDate, setStartDate] = useState("2021-01-14");
-  const [endDate, setEndDate] = useState("2024-12-31");
-  const [minRevenue, setMinRevenue] = useState(300000000000);
-  const [maxRevenue, setMaxRevenue] = useState(400000000000);
-  const [minNetIncome, setMinNetIncome] = useState(50000000000);
-  const [maxNetIncome, setMaxNetIncome] = useState(100000000000);
-  const [filteredData, setFilteredData] = useState([]);
-  const [sortColumn, setSortColumn] = useState(""); // State to keep track of which column to sort by
-  const [sortDirection, setSortDirection] = useState("asc"); // State to toggle between 'asc' and 'desc'
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: '',
+    minRevenue: '',
+    maxRevenue: '',
+    minNetIncome: '',
+    maxNetIncome: '',
+  });
 
-  const formatDate = (date) => {
-    const [day, month, year] = date.split("-");
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleFilter = async () => {
-    try {
-      const formattedStartDate = formatDate(startDate);
-      const formattedEndDate = formatDate(endDate);
-
-      const response = await axios.get(
-        `https://sample-fastapi-9xca.onrender.com/filter?start_date=${formattedStartDate}&end_date=${formattedEndDate}&min_revenue=${minRevenue}&max_revenue=${maxRevenue}&min_net_income=${minNetIncome}&max_net_income=${maxNetIncome}`
-      );
-
-      if (response.data && Array.isArray(response.data.filtered_data)) {
-        setFilteredData(response.data.filtered_data);
-      } else {
-        setFilteredData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
+  
+    const [financialData, setfinancialData] = useState([])
+    const fetchData = async () => {
+      const url = 'https://financialmodelingprep.com/api/v3/income-statement/AAPL?period=annual&apikey=gB7ouWF6QVCrOtsUYaAinqxUNSXkgyYr'
+      const data = await fetch(url)
+      const data1 = await data.json()
+      setfinancialData(data1)
     }
+  
+    useEffect(() => {
+  
+      const res = fetchData()
+    }, [])
+  
+  const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({ ...filters, [name]: value });
   };
 
-  // Sort function
-  const sortData = (column) => {
-    const newSortDirection = sortColumn === column && sortDirection === "asc" ? "desc" : "asc";
-    setSortColumn(column);
-    setSortDirection(newSortDirection);
-
-    const sortedData = [...filteredData].sort((a, b) => {
-      if (column === "date") {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return newSortDirection === "asc" ? dateA - dateB : dateB - dateA;
-      }
-      const valueA = a[column];
-      const valueB = b[column];
-
-      if (newSortDirection === "asc") {
-        return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
-      } else {
-        return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
-      }
-    });
-
-    setFilteredData(sortedData);
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
   };
+
+  const sortedData = [...financialData].sort((a, b) => {
+    if (sortConfig.key) {
+      const aValue = sortConfig.key === 'date' ? new Date(a[sortConfig.key]) : a[sortConfig.key];
+      const bValue = sortConfig.key === 'date' ? new Date(b[sortConfig.key]) : b[sortConfig.key];
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'ascending' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'ascending' ? 1 : -1;
+      }
+    }
+    return 0;
+  });
+
+  const filteredData = sortedData.filter((item) => {
+    const date = new Date(item.date).getFullYear();
+    const startDate = filters.startDate ? parseInt(filters.startDate) : null;
+    const endDate = filters.endDate ? parseInt(filters.endDate) : null;
+    const minRevenue = filters.minRevenue ? parseFloat(filters.minRevenue) : null;
+    const maxRevenue = filters.maxRevenue ? parseFloat(filters.maxRevenue) : null;
+    const minNetIncome = filters.minNetIncome ? parseFloat(filters.minNetIncome) : null;
+    const maxNetIncome = filters.maxNetIncome ? parseFloat(filters.maxNetIncome) : null;
+
+    return (
+      (!startDate || date >= startDate) &&
+      (!endDate || date <= endDate) &&
+      (!minRevenue || item.revenue >= minRevenue) &&
+      (!maxRevenue || item.revenue <= maxRevenue) &&
+      (!minNetIncome || item.netIncome >= minNetIncome) &&
+      (!maxNetIncome || item.netIncome <= maxNetIncome)
+    );
+  });
+
+
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Data Filter</h1>
+    <div className="p-4 sm:p-6 lg:p-8 font-sans">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4">Financial Data</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <label className="block">Start Date:</label>
+          <label className="block text-sm font-medium mb-1">Start Year</label>
           <input
             type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="p-2 border rounded w-full"
+            name="startDate"
+            value={filters.startDate}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
         <div>
-          <label className="block">End Date:</label>
+          <label className="block text-sm font-medium mb-1">End Year</label>
           <input
             type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="p-2 border rounded w-full"
+            name="endDate"
+            value={filters.endDate}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
         <div>
-          <label className="block">Min Revenue:</label>
+          <label className="block text-sm font-medium mb-1">Min Revenue</label>
           <input
             type="number"
-            value={minRevenue}
-            onChange={(e) => setMinRevenue(e.target.value)}
-            className="p-2 border rounded w-full"
+            name="minRevenue"
+            value={filters.minRevenue}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
         <div>
-          <label className="block">Max Revenue:</label>
+          <label className="block text-sm font-medium mb-1">Max Revenue</label>
           <input
             type="number"
-            value={maxRevenue}
-            onChange={(e) => setMaxRevenue(e.target.value)}
-            className="p-2 border rounded w-full"
+            name="maxRevenue"
+            value={filters.maxRevenue}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
         <div>
-          <label className="block">Min Net Income:</label>
+          <label className="block text-sm font-medium mb-1">Min Net Income</label>
           <input
             type="number"
-            value={minNetIncome}
-            onChange={(e) => setMinNetIncome(e.target.value)}
-            className="p-2 border rounded w-full"
+            name="minNetIncome"
+            value={filters.minNetIncome}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
         <div>
-          <label className="block">Max Net Income:</label>
+          <label className="block text-sm font-medium mb-1">Max Net Income</label>
           <input
             type="number"
-            value={maxNetIncome}
-            onChange={(e) => setMaxNetIncome(e.target.value)}
-            className="p-2 border rounded w-full"
+            name="maxNetIncome"
+            value={filters.maxNetIncome}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded"
           />
-        </div>
-
-        <div className="col-span-full text-center">
-          <button
-            onClick={handleFilter}
-            className="mt-4 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 w-full sm:w-auto"
-          >
-            Filter
-          </button>
         </div>
       </div>
 
-      {filteredData.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200 shadow-md">
-            <thead>
-              <tr className="bg-gray-100">
-                <th
-                  className="px-4 py-2 text-left cursor-pointer"
-                  onClick={() => sortData("date")}
-                >
-                  Date {sortColumn === "date" && (sortDirection === "asc" ? "↑" : "↓")}
-                </th>
-                <th
-                  className="px-4 py-2 text-left cursor-pointer"
-                  onClick={() => sortData("revenue")}
-                >
-                  Revenue {sortColumn === "revenue" && (sortDirection === "asc" ? "↑" : "↓")}
-                </th>
-                <th
-                  className="px-4 py-2 text-left cursor-pointer"
-                  onClick={() => sortData("netIncome")}
-                >
-                  Net Income {sortColumn === "netIncome" && (sortDirection === "asc" ? "↑" : "↓")}
-                </th>
-                <th
-                  className="px-4 py-2 text-left cursor-pointer"
-                  onClick={() => sortData("eps")}
-                >
-                  EPS {sortColumn === "eps" && (sortDirection === "asc" ? "↑" : "↓")}
-                </th>
-                <th
-                  className="px-4 py-2 text-left cursor-pointer"
-                  onClick={() => sortData("operatingIncome")}
-                >
-                  Operating Income{" "}
-                  {sortColumn === "operatingIncome" && (sortDirection === "asc" ? "↑" : "↓")}
-                </th>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border border-gray-300 text-sm sm:text-base">
+          <thead>
+            <tr className="bg-gray-100 text-left">
+              <th
+                className="p-3 border border-gray-300 cursor-pointer"
+                onClick={() => handleSort('date')}
+              >
+                Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+              </th>
+              <th
+                className="p-3 border border-gray-300 cursor-pointer"
+                onClick={() => handleSort('revenue')}
+              >
+                Revenue {sortConfig.key === 'revenue' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+              </th>
+              <th
+                className="p-3 border border-gray-300 cursor-pointer"
+                onClick={() => handleSort('netIncome')}
+              >
+                Net Income {sortConfig.key === 'netIncome' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+              </th>
+              <th className="p-3 border border-gray-300">Gross Profit</th>
+              <th className="p-3 border border-gray-300">EPS</th>
+              <th className="p-3 border border-gray-300">Operating Income</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((item, index) => (
+              <tr key={index} className="odd:bg-white even:bg-gray-50 border-b border-gray-300">
+                <td className="p-3 border border-gray-300">{item.date}</td>
+                <td className="p-3 border border-gray-300">${item.revenue.toLocaleString()}</td>
+                <td className="p-3 border border-gray-300">${item.netIncome.toLocaleString()}</td>
+                <td className="p-3 border border-gray-300">${item.grossProfit.toLocaleString()}</td>
+                <td className="p-3 border border-gray-300">{item.eps}</td>
+                <td className="p-3 border border-gray-300">${item.operatingIncome.toLocaleString()}</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((item, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-2">{item.date}</td>
-                  <td className="px-4 py-2">{item.revenue}</td>
-                  <td className="px-4 py-2">{item.netIncome}</td>
-                  <td className="px-4 py-2">{item.eps}</td>
-                  <td className="px-4 py-2">{item.operatingIncome}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Sorting Instruction Note */}
-          <p className="text-center text-gray-500 mt-4">
-            Note: Click on the column headers to sort the data.
-          </p>
-        </div>
-      ) : (
-        <p className="text-center text-gray-500 mt-4">No data available for the selected filters.</p>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
