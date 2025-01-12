@@ -1,25 +1,5 @@
 import React, { useEffect, useState } from 'react';
 
-const financialData = [
-  {
-    date: "2024-09-28",
-    revenue: 391035000000,
-    netIncome: 93736000000,
-    grossProfit: 180683000000,
-    eps: 6.11,
-    operatingIncome: 123216000000,
-  },
-  {
-    date: "2023-09-30",
-    revenue: 383285000000,
-    netIncome: 96995000000,
-    grossProfit: 169148000000,
-    eps: 6.16,
-    operatingIncome: 114301000000,
-  },
-];
-
-
 
 const App = () => {
   const [filters, setFilters] = useState({
@@ -97,112 +77,95 @@ const App = () => {
 
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 font-sans">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4">Financial Data</h1>
+    <div className="bg-gray-50 min-h-screen p-6 sm:p-12 font-sans">
+      <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6 sm:p-10">
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center">Financial Data Dashboard</h1>
 
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Start Year</label>
-          <input
-            type="date"
-            name="startDate"
-            value={filters.startDate}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {[
+            { label: 'Start Year', name: 'startDate' },
+            { label: 'End Year', name: 'endDate' },
+            { label: 'Min Revenue', name: 'minRevenue' },
+            { label: 'Max Revenue', name: 'maxRevenue' },
+            { label: 'Min Net Income', name: 'minNetIncome' },
+            { label: 'Max Net Income', name: 'maxNetIncome' },
+          ].map(({ label, name }) => (
+            <div key={name}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+              <input
+                type="number"
+                name={name}
+                value={filters[name]}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+          ))}
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">End Year</label>
-          <input
-            type="date"
-            name="endDate"
-            value={filters.endDate}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Min Revenue</label>
-          <input
-            type="number"
-            name="minRevenue"
-            value={filters.minRevenue}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Max Revenue</label>
-          <input
-            type="number"
-            name="maxRevenue"
-            value={filters.maxRevenue}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Min Net Income</label>
-          <input
-            type="number"
-            name="minNetIncome"
-            value={filters.minNetIncome}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Max Net Income</label>
-          <input
-            type="number"
-            name="maxNetIncome"
-            value={filters.maxNetIncome}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-        </div>
-      </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300 text-sm sm:text-base">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th
-                className="p-3 border border-gray-300 cursor-pointer"
-                onClick={() => handleSort('date')}
-              >
-                Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th
-                className="p-3 border border-gray-300 cursor-pointer"
-                onClick={() => handleSort('revenue')}
-              >
-                Revenue {sortConfig.key === 'revenue' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th
-                className="p-3 border border-gray-300 cursor-pointer"
-                onClick={() => handleSort('netIncome')}
-              >
-                Net Income {sortConfig.key === 'netIncome' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th className="p-3 border border-gray-300">Gross Profit</th>
-              <th className="p-3 border border-gray-300">EPS</th>
-              <th className="p-3 border border-gray-300">Operating Income</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((item, index) => (
-              <tr key={index} className="odd:bg-white even:bg-gray-50 border-b border-gray-300">
-                <td className="p-3 border border-gray-300">{item.date}</td>
-                <td className="p-3 border border-gray-300">${item.revenue.toLocaleString()}</td>
-                <td className="p-3 border border-gray-300">${item.netIncome.toLocaleString()}</td>
-                <td className="p-3 border border-gray-300">${item.grossProfit.toLocaleString()}</td>
-                <td className="p-3 border border-gray-300">{item.eps}</td>
-                <td className="p-3 border border-gray-300">${item.operatingIncome.toLocaleString()}</td>
+        <div className="overflow-x-auto rounded-lg shadow-md">
+          <table className="w-full table-auto border-collapse border border-gray-200 text-left text-sm sm:text-base">
+            <thead className="bg-indigo-600 text-white">
+              <tr>
+                {[
+                  { label: 'Date', key: 'date' },
+                  { label: 'Revenue', key: 'revenue' },
+                  { label: 'Net Income', key: 'netIncome' },
+                  { label: 'Gross Profit' },
+                  { label: 'EPS' },
+                  { label: 'Operating Income' },
+                ].map((column, idx) => (
+                  <th
+                    key={idx}
+                    className={`p-4 border-b border-indigo-700 ${
+                      column.key ? 'cursor-pointer' : ''
+                    }`}
+                    onClick={column.key ? () => handleSort(column.key) : undefined}
+                  >
+                    {column.label}{' '}
+                    {sortConfig.key === column.key &&
+                      (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredData.map((item, index) => (
+                <tr
+                  key={index}
+                  className={`${
+                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                  } hover:bg-gray-100`}
+                >
+                  <td className="p-4 border-b border-gray-200">{item.date}</td>
+                  <td className="p-4 border-b border-gray-200">
+                    ${item.revenue.toLocaleString()}
+                  </td>
+                  <td className="p-4 border-b border-gray-200">
+                    ${item.netIncome.toLocaleString()}
+                  </td>
+                  <td className="p-4 border-b border-gray-200">
+                    ${item.grossProfit.toLocaleString()}
+                  </td>
+                  <td className="p-4 border-b border-gray-200">{item.eps}</td>
+                  <td className="p-4 border-b border-gray-200">
+                    ${item.operatingIncome.toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+              {filteredData.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="text-center text-gray-500 p-6 border-t border-gray-200"
+                  >
+                    No data found. Adjust your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
